@@ -1,6 +1,6 @@
 #!/bin/bash
 SECONDS=0
-set -e
+set -eo pipefail
 
 # Set kernel path
 KERNEL_PATH="out/arch/arm64/boot"
@@ -20,32 +20,17 @@ DATE="$(TZ=Asia/Jakarta date +%Y%m%d%H%M)"
 DEFCONFIG="arch/arm64/configs/surya_defconfig"
 
 # Set kernel name
-KERNEL_NAME="rethinking-$1-$2-$3.zip"
+KERNEL_NAME="rethinking-$1-$2.zip"
 
-# Set anykernel
-if [ "$1" = "SnowCone" ]; then
-	ANYKERNEL="S"
-elif [ "$1" = "Tiramisu" ]; then
-	ANYKERNEL="T"
-else
-	ANYKERNEL="U"
-fi
-
+# Simple sed function
 set_cfg() {
 	local key="$1"; local val="$2"
 	if [ "$val" = "y" ]; then sed -i "s/^# $key is not set/$key=y/; s/^$key=.*/$key=y/" "$DEFCONFIG"
 	else sed -i "s/^$key=.*/# $key is not set/" "$DEFCONFIG"; fi
 }
 
-# Setup Variant
-case "$1" in
-	SnowCone) set_cfg CONFIG_CAMERA_BOOTCLOCK_TIMESTAMP n ;;
-	Tiramisu) set_cfg CONFIG_CAMERA_BOOTCLOCK_TIMESTAMP y ;;
-	*) echo "Unknown variant: $1"; exit 1 ;;
-esac
-
 # Setup Root
-case "$2" in
+case "$1" in
 	KSU)
 		set_cfg CONFIG_KSU y
 		set_cfg CONFIG_KSU_SUSFS n ;;
@@ -58,7 +43,7 @@ case "$2" in
 		set_cfg CONFIG_KSU n
 		set_cfg CONFIG_KSU_SUSFS n ;;
 
-		*) echo "Unknown root: $2"; exit 1 ;;
+		*) echo "Unknown root: $1"; exit 1 ;;
 esac
 
 # Kernel Compiler
@@ -83,8 +68,8 @@ function KERNEL_COMPILE() {
 	# Make the config
 	make O=out ARCH=arm64 surya_defconfig
 
-	# Build the kernel with clang and log output
-	make -j$(nproc --all) O=out ARCH=arm64 CC=clang LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_COMPAT=arm-linux-gnueabi- LLVM=1 LLVM_IAS=1 2>&1
+	# Build the kernel with clang
+	make -j$(nproc --all) O=out ARCH=arm64 CC=clang LD=ld.lld AS=llvm-as AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_COMPAT=arm-linux-gnueabi- LLVM=1 LLVM_IAS=1
 }
 
 # Kernel Results
@@ -118,7 +103,7 @@ function KERNEL_RESULT() {
 
 # Run all function
 rm -rf compile.log
-KERNEL_RESULT "$ANYKERNEL" "$KERNEL_NAME" "$4" | tee -a compile.log
+KERNEL_RESULT "U" "$KERNEL_NAME" "$3" | tee compile.log
 
 # Done bang
 echo -e "Completed in $((SECONDS / 60)) minute(s) and $((SECONDS % 60)) second(s) !\n"
