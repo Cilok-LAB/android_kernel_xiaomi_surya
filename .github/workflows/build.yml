@@ -21,17 +21,11 @@ jobs:
     strategy:
       matrix:
         include:
-          - variant: "Tiramisu"
+          - variant: "staging"
             root: "KSU+SUSFS"
-          - variant: "Tiramisu"
+          - variant: "staging"
             root: "KSU"
-          - variant: "Tiramisu"
-            root: "NoKSU"
-          - variant: "SnowCone"
-            root: "KSU+SUSFS"
-          - variant: "SnowCone"
-            root: "KSU"
-          - variant: "SnowCone"
+          - variant: "staging"
             root: "NoKSU"
 
     steps:
@@ -49,7 +43,7 @@ jobs:
       run: |
         sudo apt install device-tree-compiler -y
         mkdir -p ${{ env.ARTIFACT }}
-        chmod +x build.sh && ./build.sh ${{ env.VARIANT }} ${{ env.ROOT }} ${{ env.DATE }} ${{ env.ARTIFACT }}
+        chmod +x build.sh && ./build.sh ${{ env.ROOT }} ${{ env.DATE }} ${{ env.ARTIFACT }}
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
@@ -95,9 +89,7 @@ jobs:
           tag_name: ${{ env.TAG }}
           files: artifact/**
           body: |
-            ### Artifacts Means:
-            1. Tiramisu: Android 13-16
-            2. SnowCone: Android 11-12
-
             ### Notes
             *Flash carefully. Do not interrupt the synchronization.*
+            *MIUI/HyperOS and AOSP/A support*
+            *Android 11-16 support*
