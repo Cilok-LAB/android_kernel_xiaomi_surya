@@ -2125,6 +2125,8 @@ static ssize_t reclaim_write(struct file *file, const char __user *buf,
 	if (type == RECLAIM_RANGE) {
 		vma = find_vma(mm, start);
 		while (vma) {
+			if (task->signal->oom_score_adj == 0)
+				break;
 			if (vma->vm_start > end)
 				break;
 			if (is_vm_hugetlb_page(vma))
@@ -2138,6 +2140,9 @@ static ssize_t reclaim_write(struct file *file, const char __user *buf,
 		}
 	} else {
 		for (vma = mm->mmap; vma; vma = vma->vm_next) {
+			if (task->signal->oom_score_adj == 0)
+				break;
+
 			if (is_vm_hugetlb_page(vma))
 				continue;
 
