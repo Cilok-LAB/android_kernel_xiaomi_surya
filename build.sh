@@ -16,8 +16,12 @@ DTBO="${KERNEL_PATH}/dtbo.img"
 # Set date kernel
 DATE="$(TZ=Asia/Jakarta date +%Y%m%d%H%M)"
 
+# Set defconfig path
+DEFCONFIG="arch/arm64/configs/surya_defconfig"
+
 # Set kernel name
-KERNEL_NAME="derivativeTK-${DATE}.zip"
+KERNEL_NAME1="derivativeTK-${DATE}.zip"
+KERNEL_NAME2="derivativeSK-${DATE}.zip"
 
 function KERNEL_COMPILE() {
 	# Set environment variables
@@ -26,7 +30,7 @@ function KERNEL_COMPILE() {
 	export KBUILD_BUILD_USER=khayloaf
 
 	# Create output directory and do a clean build
-	rm -rf out && mkdir -p out
+	rm -rf out anykernel && mkdir -p out
 
 	# Download clang if not present
 	if [[ ! -d clang ]]; then mkdir -p clang
@@ -55,7 +59,7 @@ function KERNEL_RESULT() {
 
 	# Create anykernel
 	rm -rf anykernel
-	git clone https://github.com/kylieeXD/AK3-Surya.git -b T anykernel
+	git clone https://github.com/kylieeXD/AK3-Surya.git -b "$1" anykernel
 
 	# Copying image
 	cp "$DTB" "anykernel/kernels/"
@@ -63,18 +67,24 @@ function KERNEL_RESULT() {
 	cp "$GZIP" "anykernel/kernels/"
 
 	# Created zip kernel
-	cd anykernel && zip -r9 "$1" *
+	cd anykernel && zip -r9 "$2" *
 
 	# Upload kernel
-	curl -T "$1" -u :dc4f2d6d-ef86-4241-af44-44f311a0ecb9 https://pixeldrain.com/api/file/
+	curl -T "$2" -u :dc4f2d6d-ef86-4241-af44-44f311a0ecb9 https://pixeldrain.com/api/file/
 
 	# Back to kernel root
 	cd - >/dev/null
 }
 
-# Run all function
+# Run all function for T
 rm -rf compile.log
-KERNEL_RESULT "$KERNEL_NAME" | tee -a compile.log
+KERNEL_RESULT "T" "$KERNEL_NAME1" | tee -a compile.log
+
+# Run all function for S
+sed -i 's/^CONFIG_CAMERA_BOOTCLOCK_TIMESTAMP=y$/# CONFIG_CAMERA_BOOTCLOCK_TIMESTAMP is not set/' "$DEFCONFIG"
+rm -rf compile.log
+KERNEL_RESULT "S" "$KERNEL_NAME2" | tee -a compile.log
+git restore "$DEFCONFIG"
 
 # Done bang
 echo -e "Completed in $((SECONDS / 60)) minute(s) and $((SECONDS % 60)) second(s) !\n"
