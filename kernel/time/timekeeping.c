@@ -2245,6 +2245,13 @@ unsigned long get_seconds(void)
 }
 EXPORT_SYMBOL(get_seconds);
 
+struct timespec __current_kernel_time(void)
+{
+	struct timekeeper *tk = &tk_core.timekeeper;
+
+	return timespec64_to_timespec(tk_xtime(tk));
+}
+
 struct timespec64 current_kernel_time64(void)
 {
 	struct timekeeper *tk = &tk_core.timekeeper;
