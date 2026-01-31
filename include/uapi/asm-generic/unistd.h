@@ -742,7 +742,7 @@ __SYSCALL(__NR_process_madvise, sys_process_madvise)
 __SYSCALL(__NR_close_range, sys_close_range)
 
 #undef __NR_syscalls
-#define __NR_syscalls 437
+#define __NR_syscalls 441
 
 /*
  * All syscalls below here should go away really,
