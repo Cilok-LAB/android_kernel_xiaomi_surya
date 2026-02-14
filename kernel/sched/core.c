@@ -5246,7 +5246,6 @@ out_put_task:
 	return retval;
 }
 
-#if 0
 static int get_user_cpu_mask(unsigned long __user *user_mask_ptr, unsigned len,
 			     struct cpumask *new_mask)
 {
@@ -5257,7 +5256,6 @@ static int get_user_cpu_mask(unsigned long __user *user_mask_ptr, unsigned len,
 
 	return copy_from_user(new_mask, user_mask_ptr, len) ? -EFAULT : 0;
 }
-#endif
 
 /**
  * sys_sched_setaffinity - set the CPU affinity of a process
@@ -5270,7 +5268,6 @@ static int get_user_cpu_mask(unsigned long __user *user_mask_ptr, unsigned len,
 SYSCALL_DEFINE3(sched_setaffinity, pid_t, pid, unsigned int, len,
 		unsigned long __user *, user_mask_ptr)
 {
-#if 0
 	cpumask_var_t new_mask;
 	int retval;
 
@@ -5282,9 +5279,6 @@ SYSCALL_DEFINE3(sched_setaffinity, pid_t, pid, unsigned int, len,
 		retval = sched_setaffinity(pid, new_mask);
 	free_cpumask_var(new_mask);
 	return retval;
-#else
-	return 0;
-#endif
 }
 
 long sched_getaffinity(pid_t pid, struct cpumask *mask)
