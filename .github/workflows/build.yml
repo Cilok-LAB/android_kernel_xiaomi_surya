@@ -1,24 +1,87 @@
-name: Build Kernel
+name: Build Kernel and Release
 
 on:
   push:
   workflow_dispatch:
 
 jobs:
-  build:
-    name: Build Kernel
+  build_kernel:
+    name: Build Kernel and Release
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - variant: "Tiramisu"
+            root: "KSU+SUSFS"
+          - variant: "Tiramisu"
+            root: "KSU"
+          - variant: "Tiramisu"
+            root: "NoKSU"
+          - variant: "SnowCone"
+            root: "KSU+SUSFS"
+          - variant: "SnowCone"
+            root: "KSU"
+          - variant: "SnowCone"
+            root: "NoKSU"
 
     steps:
     - name: Checkout Source
       uses: actions/checkout@v4
 
-    - name: Setup Timezone
+    - name: Set environment
       run: |
-        sudo timedatectl set-timezone Asia/Jakarta
-        echo "BUILD_TIME=$(TZ=Asia/Jakarta date '+%d%m%Y-%H%M')" >> $GITHUB_ENV
+        echo "VARIANT=${{ matrix.variant }}" >> $GITHUB_ENV
+        echo "ROOT=${{ matrix.root }}" >> $GITHUB_ENV
+        echo "DATE=$(TZ=Asia/Jakarta date +%Y%m%d%H%M)" >> $GITHUB_ENV
+        echo "ARTIFACT=$GITHUB_WORKSPACE/artifact" >> $GITHUB_ENV
 
     - name: Building
       run: |
         sudo apt install device-tree-compiler -y
-        bash build.sh
+        chmod +x build.sh && ./build.sh ${{ env.VARIANT }} ${{ env.ROOT }} ${{ env.DATE }} ${{ env.ARTIFACT }}
+
+  create_release:
+    needs: build_kernel
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup git authentication
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/Cilok-LAB/android_kernel_xiaomi_surya
+
+      - name: Set DATE and TAG
+        run: |
+          DATE=$(TZ=Asia/Jakarta date +%Y%m%d%H%M)
+          echo "TAG=$DATE" >> $GITHUB_ENV
+
+      - name: Create Git tag
+        run: |
+          git tag -a "$TAG" -m "imysm tirr"
+          git push origin "$TAG"
+
+      - name: Upload artifacts to release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.TAG }}
+          files: artifact/**
+          body: |
+            ### 📦 Artifacts Tiramisu:
+            1. Tiramisu-KSU+SUSFS: Android 13-16 with KSU and SuSFS
+            2. Tiramisu-KSU: Android 13-16 with KSU only
+            3. Tiramisu-NoKSU: Android 13-16 with no ROOT
+
+            ### 📦 Artifacts SnowCone:
+            1. SnowCone-KSU+SUSFS: Android 11-12 with KSU and SuSFS
+            2. SnowCone-KSU: Android 11-12 with KSU only
+            3. SnowCone-NoKSU: Android 11-12 with no ROOT
+
+            *Flash carefully. Do not interrupt the synchronization.*

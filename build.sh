@@ -20,8 +20,16 @@ DATE="$(TZ=Asia/Jakarta date +%Y%m%d%H%M)"
 DEFCONFIG="arch/arm64/configs/surya_defconfig"
 
 # Set kernel name
-KERNEL_NAME1="rethinkingTK-${DATE}.zip"
-KERNEL_NAME2="rethinkingSK-${DATE}.zip"
+KERNEL_NAME="rethinking-$1-$2-$3.zip"
+
+# Set anykernel
+if [ "$1" = "SnowCone" ]; then
+	ANYKERNEL="S"
+elif [ "$1" = "Tiramisu" ]; then
+	ANYKERNEL="T"
+else
+	ANYKERNEL="U"
+fi
 
 function KERNEL_COMPILE() {
 	# Set environment variables
@@ -41,6 +49,15 @@ function KERNEL_COMPILE() {
 	# Add clang bin directory to PATH
 	export PATH="${PWD}/clang/bin:$PATH"
 
+	# Setup Variant
+	if [ "$1" = "SnowCone" ]; then sed -i 's/^CONFIG_CAMERA_BOOTCLOCK_TIMESTAMP=y$/# CONFIG_CAMERA_BOOTCLOCK_TIMESTAMP is not set/' "$DEFCONFIG"; fi
+	if [ "$1" = "Tiramisu" ]; then sed -i 's/^# CONFIG_CAMERA_BOOTCLOCK_TIMESTAMP is not set$/CONFIG_CAMERA_BOOTCLOCK_TIMESTAMP=y/' "$DEFCONFIG"; fi
+
+	# Setup Root
+	if [ "$2" = "KSU+SUSFS" ]; then sed -i 's/^# CONFIG_KSU is not set$/CONFIG_KSU=y/' "$DEFCONFIG" && sed -i 's/^# CONFIG_KSU_SUSFS is not set$/CONFIG_KSU_SUSFS=y/' "$DEFCONFIG"; fi
+	if [ "$2" = "KSU" ]; then sed -i 's/^# CONFIG_KSU is not set$/CONFIG_KSU=y/' "$DEFCONFIG" && sed -i 's/^CONFIG_KSU_SUSFS=y$/# CONFIG_KSU_SUSFS is not set/' "$DEFCONFIG"; fi
+	if [ "$2" = "NoKSU" ]; then sed -i 's/^CONFIG_KSU=y$/# CONFIG_KSU is not set/' "$DEFCONFIG" && sed -i 's/^CONFIG_KSU_SUSFS=y$/# CONFIG_KSU_SUSFS is not set/' "$DEFCONFIG"; fi
+	
 	# Make the config
 	make O=out ARCH=arm64 surya_defconfig
 
@@ -69,8 +86,8 @@ function KERNEL_RESULT() {
 	# Created zip kernel
 	cd anykernel && zip -r9 "$2" *
 
-	# Upload kernel
-	curl -T "$2" -u :dc4f2d6d-ef86-4241-af44-44f311a0ecb9 https://pixeldrain.com/api/file/
+	# Add kernel to artifact
+	cp "$2" "$3"
 
 	# Back to kernel root
 	cd - >/dev/null
@@ -78,13 +95,8 @@ function KERNEL_RESULT() {
 
 # Run all function for T
 rm -rf compile.log
-KERNEL_RESULT "T" "$KERNEL_NAME1" | tee -a compile.log
-
-# Run all function for S
-sed -i 's/^CONFIG_CAMERA_BOOTCLOCK_TIMESTAMP=y$/# CONFIG_CAMERA_BOOTCLOCK_TIMESTAMP is not set/' "$DEFCONFIG"
-rm -rf compile.log
-KERNEL_RESULT "S" "$KERNEL_NAME2" | tee -a compile.log
-git restore "$DEFCONFIG"
+KERNEL_RESULT "$ANYKERNEL" "$KERNEL_NAME" "$4" | tee -a compile.log
 
 # Done bang
 echo -e "Completed in $((SECONDS / 60)) minute(s) and $((SECONDS % 60)) second(s) !\n"
+git restore "$DEFCONFIG"
