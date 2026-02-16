@@ -72,16 +72,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ env.TAG }}
-          files: artifact/**
+          files: ${{ env.ARTIFACT }}/**
           body: |
-            ### 📦 Artifacts Tiramisu:
-            1. Tiramisu-KSU+SUSFS: Android 13-16 with KSU and SuSFS
-            2. Tiramisu-KSU: Android 13-16 with KSU only
-            3. Tiramisu-NoKSU: Android 13-16 with no ROOT
+            ### Artifacts Means:
+            1. Tiramisu: Android 13-16
+            2. SnowCone: Android 11-12
 
-            ### 📦 Artifacts SnowCone:
-            1. SnowCone-KSU+SUSFS: Android 11-12 with KSU and SuSFS
-            2. SnowCone-KSU: Android 11-12 with KSU only
-            3. SnowCone-NoKSU: Android 11-12 with no ROOT
-
+            ### Notes
             *Flash carefully. Do not interrupt the synchronization.*
