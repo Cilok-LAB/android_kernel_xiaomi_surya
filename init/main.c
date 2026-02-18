@@ -106,6 +106,16 @@ extern void radix_tree_init(void);
 bool legacy_ebpf __read_mostly = false;
 EXPORT_SYMBOL(legacy_ebpf);
 
+bool is_legacy_timestamp = false;
+EXPORT_SYMBOL(is_legacy_timestamp);
+
+static int __init read_is_legacy_timestamp(char *s)
+{
+    strtobool(s, &is_legacy_timestamp);
+    return 1;
+}
+__setup("init.is_legacy_timestamp=", read_is_legacy_timestamp);
+
 static int __init parse_legacy_ebpf(char *str)
 {
     strtobool(str, &legacy_ebpf);
