@@ -1886,6 +1886,17 @@ CONFIG_CNSS_GENL=y
 # CONFIG_VMXNET3 is not set
 # CONFIG_ISDN is not set
 
+
+#
+# KernelSU
+#
+CONFIG_KSU=y
+
+#
+# KernelSU - SuSFS
+#
+CONFIG_KSU_SUSFS=y
+
 #
 # Input device support
 #
