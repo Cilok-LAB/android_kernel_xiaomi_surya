@@ -1577,6 +1577,7 @@ config EVENTFD
 config BPF_SYSCALL
 	bool "Enable bpf() system call"
 	select BPF
+	select IRQ_WORK
 	default n
 	help
 	  Enable the bpf() system call that allows to manipulate eBPF
@@ -2178,3 +2179,5 @@ config ASN1
 	  functions to call on what tags.
 
 source "kernel/Kconfig.locks"
+
+source "init/Kconfig.gki"
