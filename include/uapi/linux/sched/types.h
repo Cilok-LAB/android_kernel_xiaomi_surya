@@ -4,6 +4,10 @@
 
 #include <linux/types.h>
 
+struct sched_param {
+	int sched_priority;
+};
+
 #define SCHED_ATTR_SIZE_VER0	48	/* sizeof first published struct */
 
 /*
