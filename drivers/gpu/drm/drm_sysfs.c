@@ -18,6 +18,7 @@
 #include <linux/err.h>
 #include <linux/export.h>
 
+#include <drm/drm_encoder.h>
 #include <drm/drm_sysfs.h>
 #include <drm/drmP.h>
 #include "drm_internal.h"
@@ -229,16 +230,105 @@ static ssize_t modes_show(struct device *device,
 	return written;
 }
 
+
+static ssize_t panel_info_show(struct device *device,
+			      struct device_attribute *attr,
+			      char *buf)
+{
+	struct drm_connector *connector;
+	struct drm_encoder *encoder;
+	struct drm_bridge *bridge;
+	char pname[128] = {0};
+	int written = 0;
+
+	connector = to_drm_connector(device);
+	if (!connector)
+		return 0;
+
+	encoder = connector->encoder;
+	if (!encoder)
+		return 0;
+
+	bridge = encoder->bridge;
+	if (!bridge)
+		return 0;
+
+	written = drm_get_panel_info(bridge, pname);
+	if (written)
+		return snprintf(buf, PAGE_SIZE, "panel_name=%s\n", pname);
+
+	return 0;
+}
+
+static ssize_t disp_param_store(struct device *device,
+				struct device_attribute *attr,
+				const char *buf, size_t count)
+{
+	struct drm_connector *connector;
+	struct drm_encoder *encoder;
+	struct drm_bridge *bridge;
+	int param;
+
+	if (!device)
+		return count;
+
+	connector = to_drm_connector(device);
+	if (!connector)
+		return count;
+
+	encoder = connector->encoder;
+	if (!encoder)
+		return count;
+
+	bridge = encoder->bridge;
+	if (!bridge)
+		return count;
+
+	if (sscanf(buf, "0x%x", &param) != 1)
+		return -EINVAL;
+
+	drm_bridge_disp_param_set(bridge, param);
+
+	return count;
+}
+
+static ssize_t disp_param_show(struct device *device,
+			       struct device_attribute *attr,
+			       char *buf)
+{
+	struct drm_connector *connector;
+	struct drm_encoder *encoder;
+	struct drm_bridge *bridge;
+
+	connector = to_drm_connector(device);
+	if (!connector)
+		return 0;
+
+	encoder = connector->encoder;
+	if (!encoder)
+		return 0;
+
+	bridge = encoder->bridge;
+	if (!bridge)
+		return 0;
+
+	return drm_bridge_disp_param_get(bridge, buf);
+}
+
 static DEVICE_ATTR_RW(status);
 static DEVICE_ATTR_RO(enabled);
 static DEVICE_ATTR_RO(dpms);
 static DEVICE_ATTR_RO(modes);
+static DEVICE_ATTR_RW(disp_param);
+static DEVICE_ATTR_RO(panel_info);
 
 static struct attribute *connector_dev_attrs[] = {
 	&dev_attr_status.attr,
 	&dev_attr_enabled.attr,
 	&dev_attr_dpms.attr,
 	&dev_attr_modes.attr,
+	&dev_attr_disp_param.attr,
+	&dev_attr_panel_info.attr,
 	NULL
 };
 
