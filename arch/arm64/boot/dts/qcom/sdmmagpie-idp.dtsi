@@ -145,10 +145,11 @@
 &qupv3_se11_spi {
 	status = "ok";
 	device@1 {
-		compatible = "qcom,spi-msm-codec-slave";
+		compatible = "qcom,spi-msm-codec-slave,ir-spi-led";
 		#address-cells = <1>;
 		#size-cells = <1>;
 		reg = <1>; /* Chip select 0 */
+		power-supply = <&irda_regulator>;
 		spi-max-frequency = <1000000>;
 		spi-cpol;
 	};
@@ -518,6 +519,10 @@
 
 	thermal_message: thermal-message {
 		board-sensor = "VIRTUAL-SENSOR";
+	};
+	irda_regulator: irda-regulator {
+		compatible = "regulator-dummy";
+		regulator-name = "irda_regulator";
 	};
 };
 
