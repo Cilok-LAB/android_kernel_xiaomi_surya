@@ -31,10 +31,6 @@ set_cfg() {
 
 # Setup Root
 case "$1" in
-	KSU)
-		set_cfg CONFIG_KSU y
-		set_cfg CONFIG_KSU_SUSFS n ;;
-
 	KSU+SUSFS)
 		set_cfg CONFIG_KSU y
 		set_cfg CONFIG_KSU_SUSFS y ;;

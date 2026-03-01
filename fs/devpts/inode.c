@@ -565,6 +565,7 @@ void devpts_kill_index(struct pts_fs_info *fsi, int idx)
  *
  * The created inode is returned. Remove it from /dev/pts/ by devpts_pty_kill.
  */
+
 struct dentry *devpts_pty_new(struct pts_fs_info *fsi, int index, void *priv)
 {
 	struct dentry *dentry;

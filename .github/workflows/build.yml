@@ -24,8 +24,6 @@ jobs:
           - variant: "staging"
             root: "KSU+SUSFS"
           - variant: "staging"
-            root: "KSU"
-          - variant: "staging"
             root: "NoKSU"
 
     steps:
