@@ -14,13 +14,17 @@ DTB="${KERNEL_PATH}/dtb.img"
 DTBO="${KERNEL_PATH}/dtbo.img"
 
 # Set date kernel
-DATE="$(TZ=Asia/Jakarta date +%Y%m%d%H%M)"
+if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
+	DATE="$3"
+else
+	DATE="$(TZ=Asia/Jakarta date +%Y%m%d%H%M)"
+fi
 
 # Set defconfig path
 DEFCONFIG="arch/arm64/configs/surya_defconfig"
 
 # Set kernel name
-KERNEL_NAME="rethinking-$1-$2.zip"
+KERNEL_NAME="rethinking-$1-$2-$DATE.zip"
 
 # Simple sed function
 set_cfg() {
@@ -29,13 +33,22 @@ set_cfg() {
 	else sed -i "s/^$key=.*/# $key is not set/" "$DEFCONFIG"; fi
 }
 
-# Setup Root
+# Setup Variant
 case "$1" in
+	Tiramisu)
+		set_cfg CONFIG_CAMERA_BOOTCLOCK_TIMESTAMP y ;;
+	SnowCone)
+		set_cfg CONFIG_CAMERA_BOOTCLOCK_TIMESTAMP n ;;
+	*) echo "Unknown variant: $1"; exit 1 ;;
+esac
+
+# Setup Root
+case "$2" in
 	KSU)
 		set_cfg CONFIG_KSU y ;;
 	NoKSU)
 		set_cfg CONFIG_KSU n ;;
-	*) echo "Unknown root: $1"; exit 1 ;;
+	*) echo "Unknown root: $2"; exit 1 ;;
 esac
 
 # Kernel Compiler
@@ -87,7 +100,12 @@ function KERNEL_RESULT() {
 	cd anykernel && zip -r9 "$2" *
 
 	# Add kernel to artifact
-	cp "$2" "$3"
+	if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
+		cp "$2" "$3"
+	else
+		RESPONSE=$(curl -s -F "file=@$2" "https://store1.gofile.io/contents/uploadfile" || curl -s -F "file=@$2" "https://store2.gofile.io/contents/uploadfile")
+		echo -e "\nDownload link: $(echo "$RESPONSE" | grep -oP '"downloadPage":"\K[^"]+')"
+	fi
 
 	# Back to kernel root
 	cd - >/dev/null
@@ -95,7 +113,7 @@ function KERNEL_RESULT() {
 
 # Run all function
 rm -rf compile.log
-KERNEL_RESULT "U" "$KERNEL_NAME" "$3" | tee compile.log
+KERNEL_RESULT "$1" "$KERNEL_NAME" "$4" | tee compile.log
 
 # Done bang
 echo -e "Completed in $((SECONDS / 60)) minute(s) and $((SECONDS % 60)) second(s) !\n"

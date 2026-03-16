@@ -21,9 +21,13 @@ jobs:
     strategy:
       matrix:
         include:
-          - variant: "staging"
+          - variant: "Tiramisu"
             root: "KSU"
-          - variant: "staging"
+          - variant: "Tiramisu"
+            root: "NoKSU"
+          - variant: "SnowCone"
+            root: "KSU"
+          - variant: "SnowCone"
             root: "NoKSU"
 
     steps:
@@ -41,7 +45,7 @@ jobs:
       run: |
         sudo apt install device-tree-compiler -y
         mkdir -p ${{ env.ARTIFACT }}
-        chmod +x build.sh && ./build.sh ${{ env.ROOT }} ${{ env.DATE }} ${{ env.ARTIFACT }}
+        chmod +x build.sh && ./build.sh ${{ env.VARIANT }} ${{ env.ROOT }} ${{ env.DATE }} ${{ env.ARTIFACT }}
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
@@ -87,7 +91,24 @@ jobs:
           tag_name: ${{ env.TAG }}
           files: artifact/**
           body: |
+            Device Target: POCO X3 NFC (surya)
+            Kernel Source: https://github.com/Cilok-LAB/android_kernel_xiaomi_surya.git
+            Kernel Version: 4.14.356
+            Clang Version: AOSP Clang v21.0.0
+
+            ### Changelog:
+            - https://github.com/Cilok-LAB/android_kernel_xiaomi_surya/commits/rethinking
+
             ### Notes
             *Flash carefully. Do not interrupt the synchronization.*
             *MIUI/HyperOS and AOSP/A support*
             *Android 11-16 support*
+
+            ### Flash this module if you using ksu variant:
+            - https://github.com/backslashxx/mountify/releases/tag/192
+
+            ### Recommend Manager (Choose one!):
+            - KernelSU-Next: https://t.me/CilokG05/372
+            - xxKernelSU: https://t.me/CilokG05/373
+            - MamboSU: https://t.me/CilokG05/374
+            - Wild KSU: https://t.me/CilokG05/375
